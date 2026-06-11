@@ -25,7 +25,7 @@ AboutDialog::AboutDialog(QWidget* parent)
 {
     ui->setupUi(this);
     ui->buttonBox->button(QDialogButtonBox::Ok)->setText(tr("确认"));
-    ui->versionContent->setText(QString("%1").arg(OPENSPEEDY_VERSION));
+    ui->versionContent->setText(QString("%1").arg(CL_VERSION));
     connect(QGuiApplication::primaryScreen(),
             &QScreen::logicalDotsPerInchChanged,
             this,
