@@ -16,6 +16,7 @@
 *.so.*
 *_pch.h.cpp
 *_resource.rc
+!translations/*.qm
 *.qm
 .#*
 *.*#
