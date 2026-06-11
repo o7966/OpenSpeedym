@@ -34,8 +34,34 @@ jobs:
           git clone https://github.com/microsoft/vcpkg.git $VCPKG_DIR
         fi
         $VCPKG_DIR/bootstrap-vcpkg.bat
-        $VCPKG_DIR/vcpkg install qt5-base:x64-windows-static qt5-tools:x64-windows-static qt5-winextras:x64-windows-static
-        $VCPKG_DIR/vcpkg install qt5-base:x86-windows-static qt5-tools:x86-windows-static qt5-winextras:x86-windows-static
+
+        # Create overlay triplets
+        mkdir -p triplets
+
+        cat > triplets/x64-windows-static.cmake << 'EOF'
+set(VCPKG_TARGET_ARCHITECTURE x64)
+set(VCPKG_CRT_LINKAGE static)
+set(VCPKG_LIBRARY_LINKAGE static)
+set(VCPKG_CHAINLOAD_TOOLCHAIN_FILE "${VCPKG_ROOT_DIR}/triplets/x64-windows.cmake")
+EOF
+
+        cat > triplets/x86-windows-static.cmake << 'EOF'
+set(VCPKG_TARGET_ARCHITECTURE x86)
+set(VCPKG_CRT_LINKAGE static)
+set(VCPKG_LIBRARY_LINKAGE static)
+set(VCPKG_CHAINLOAD_TOOLCHAIN_FILE "${VCPKG_ROOT_DIR}/triplets/x86-windows.cmake")
+EOF
+
+        # Install only needed Qt features (skip qml/declarative to avoid OOM)
+        # Limit parallelism to reduce memory usage
+        export VCPKG_MAX_PARALLEL_CLIMB=2
+
+        $VCPKG_DIR/vcpkg install "qt5-base[core,gui,network,opengl,widgets,xcb,sql]:x64-windows-static" --overlay-triplets=triplets
+        $VCPKG_DIR/vcpkg install "qt5-tools[linguist]:x64-windows-static" --overlay-triplets=triplets
+        $VCPKG_DIR/vcpkg install "qt5-winextras:x64-windows-static" --overlay-triplets=triplets
+        $VCPKG_DIR/vcpkg install "qt5-base[core,gui,network,opengl,widgets,xcb,sql]:x86-windows-static" --overlay-triplets=triplets
+        $VCPKG_DIR/vcpkg install "qt5-tools[linguist]:x86-windows-static" --overlay-triplets=triplets
+        $VCPKG_DIR/vcpkg install "qt5-winextras:x86-windows-static" --overlay-triplets=triplets
 
     - name: Build 64-bit
       shell: cmd
