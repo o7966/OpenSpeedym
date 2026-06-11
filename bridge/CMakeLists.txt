@@ -16,18 +16,30 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
 
 # 判断是32位还是64位
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-  set(TARGET_NAME "cl64")
+  set(SUFFIX "64")
+elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
+  set(SUFFIX "32")
+else()
+  set(SUFFIX "64")
+endif()
+
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+  set(TARGET_NAME "cl64-bridge")
   set(SPEEDPATCH_LIBRARY "cl64")
 elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
-  set(TARGET_NAME "cl32")
+  set(TARGET_NAME "cl32-bridge")
   set(SPEEDPATCH_LIBRARY "cl32")
 else()
-  set(TARGET_NAME "cl64")
+  set(TARGET_NAME "cl64-bridge")
   set(SPEEDPATCH_LIBRARY "cl")
 endif()
 
 add_executable(${TARGET_NAME}
   main.cpp
+)
+
+set_target_properties(${TARGET_NAME} PROPERTIES
+  OUTPUT_NAME "cl${SUFFIX}"
 )
 
 target_link_libraries(${TARGET_NAME} Qt${QT_VERSION_MAJOR}::Core ${SPEEDPATCH_LIBRARY} winutils)
