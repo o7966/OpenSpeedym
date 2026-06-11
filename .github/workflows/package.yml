@@ -1,0 +1,108 @@
+name: Package cl
+on:
+  workflow_dispatch:
+    inputs:
+      build_id:
+        description: '构建工作流ID'
+        required: true
+        type: string
+      version:
+        description: '版本号'
+        required: true
+        default: '1.0.0'
+        type: string
+      artifact_name:
+        description: '签名的制品名称'
+        required: true
+        default: 'cl-unsigned-artifacts'
+        type: string
+
+jobs:
+  package:
+    runs-on: windows-latest  # GitHub-hosted runner
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Download build artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ github.event.inputs.artifact_name }}
+        run-id: ${{ github.event.inputs.build_id }}
+        path: artifacts/
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+
+    - id: upload-unsigned-artifacts
+      name: Re-upload as new artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: cl-unsigned-artifacts
+        path: artifacts/          
+        retention-days: 30       
+        
+    - name: SignPath signing
+      uses: signpath/github-action-submit-signing-request@v1.1
+      with:
+        api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+        organization-id: '58b9835d-38ea-4898-a564-76610c01cecd'
+        project-slug: cl
+        signing-policy-slug: release-signing
+        github-artifact-id: ${{ steps.upload-unsigned-artifacts.outputs.artifact-id }}
+        artifact-configuration-slug: initial
+        wait-for-completion: true
+        output-artifact-directory: signed-artifacts/
+        parameters: |
+          version: ${{ toJSON(github.event.inputs.version) }}
+        
+    - name: Upload signed artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: cl-${{ github.event.inputs.version }}
+        path: signed-artifacts/
+        retention-days: 30
+
+    - name: Install WiX Toolset v3
+      run: |
+        choco install wixtoolset -y
+        $env:PATH += ";C:\Program Files (x86)\WiX Toolset v3.11\bin"
+        echo "C:\Program Files (x86)\WiX Toolset v3.11\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+    - name: Prepare installer files
+      run: |
+        New-Item -ItemType Directory -Force -Path installer/files
+        Copy-Item -Path "signed-artifacts/*" -Destination "installer/files/" -Recurse -Force
+
+    - name: Build MSI installer
+      run: |
+        cd installer
+        candle.exe cl.wxs -dVersion="${{ github.event.inputs.version }}" -ext WixUIExtension
+        light.exe cl.wixobj -out ../cl-installer-${{ github.event.inputs.version }}.msi -ext WixUIExtension
+
+    - id: upload-unsigned-installer
+      name: Upload installer
+      uses: actions/upload-artifact@v4
+      with:
+        name: cl-unsigned-installer-${{ github.event.inputs.version }}
+        path: cl-installer-${{ github.event.inputs.version }}.msi
+
+    - name: SignPath signing
+      uses: signpath/github-action-submit-signing-request@v1.1
+      with:
+        api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+        organization-id: '58b9835d-38ea-4898-a564-76610c01cecd'
+        project-slug: cl
+        signing-policy-slug: release-signing
+        github-artifact-id: ${{ steps.upload-unsigned-installer.outputs.artifact-id }}
+        artifact-configuration-slug: installer
+        wait-for-completion: true
+        output-artifact-directory: signed-installer/
+        parameters: |
+          version: ${{ toJSON(github.event.inputs.version) }}    
+
+    - name: Upload signed installer
+      uses: actions/upload-artifact@v4
+      with:
+        name: cl-installer-${{ github.event.inputs.version }}
+        path: signed-installer/
+        retention-days: 30

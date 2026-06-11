@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*"
+           Name="cl"
+           Language="1033"
+           Version="$(var.Version)"
+           Manufacturer="Game1024"
+           UpgradeCode="12345678-1234-1234-1234-123456789012">
+
+    <Package InstallerVersion="200" Compressed="yes" InstallScope="perUser" />
+    <Icon Id="ProductIcon" SourceFile="files\cl.exe" />
+    <Property Id="ARPPRODUCTICON" Value="ProductIcon" />
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- 添加标准 UI，允许选择安装路径 -->
+    <UIRef Id="WixUI_InstallDir" />
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <UIRef Id="WixUI_ErrorProgressText" />
+
+    <Feature Id="ProductFeature" Title="cl" Level="1">
+      <ComponentGroupRef Id="ProductComponents" />
+    </Feature>
+  </Product>
+
+  <Fragment>
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="LocalAppDataFolder">
+        <Directory Id="INSTALLFOLDER" Name="cl" />
+      </Directory>
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="cl" />
+      </Directory>
+      <Directory Id="DesktopFolder" />
+    </Directory>
+  </Fragment>
+
+  <Fragment>
+    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+      <Component Id="MainExecutable" Guid="11111111-1111-1111-1111-111111111111">
+        <File Id="MainExecutable" Source="files\cl.exe">
+          <Shortcut Id="StartMenuShortcut"
+                   Directory="ApplicationProgramsFolder"
+                   Name="cl"
+                   WorkingDirectory="INSTALLFOLDER"
+                   Icon="ProductIcon"
+                   IconIndex="0" />
+          <Shortcut Id="DesktopShortcut"
+                   Directory="DesktopFolder"
+                   Name="cl"
+                   WorkingDirectory="INSTALLFOLDER"
+                   Icon="ProductIcon"
+                   IconIndex="0" />
+        </File>
+        <RemoveFolder Id="RemoveINSTALLFOLDER" Directory="INSTALLFOLDER" On="uninstall" />
+        <RemoveFolder Id="RemoveApplicationProgramsFolder" Directory="ApplicationProgramsFolder" On="uninstall" />
+        <RegistryValue Root="HKCU" Key="Software\cl" Name="MainExe" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+      <Component Id="Bridge32" Guid="22222222-2222-2222-2222-222222222222">
+        <File Id="Bridge32Exe" Source="files\cl32.exe" />
+        <RegistryValue Root="HKCU" Key="Software\cl" Name="Bridge32" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+      <Component Id="Bridge64" Guid="33333333-3333-3333-3333-333333333333">
+        <File Id="Bridge64Exe" Source="files\cl64.exe" />
+        <RegistryValue Root="HKCU" Key="Software\cl" Name="Bridge64" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+      <Component Id="SpeedPatch32" Guid="44444444-4444-4444-4444-444444444444">
+        <File Id="SpeedPatch32Dll" Source="files\cl32.dll" />
+        <RegistryValue Root="HKCU" Key="Software\cl" Name="Patch32" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+      <Component Id="SpeedPatch64" Guid="55555555-5555-5555-5555-555555555555">
+        <File Id="SpeedPatch64Dll" Source="files\cl64.dll" />
+        <RegistryValue Root="HKCU" Key="Software\cl" Name="Patch64" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>

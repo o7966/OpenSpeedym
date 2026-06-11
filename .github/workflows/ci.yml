@@ -1,0 +1,73 @@
+name: Build cl
+
+on:
+  pull_request:
+    branches: [ master ]
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+env:
+  VCPKG_DIR: C:\vcpkg
+
+jobs:
+  build:
+    runs-on: windows-latest
+    outputs:
+      artifact-id: ${{ steps.upload-artifacts.outputs.artifact-id }}
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Cache vcpkg
+      id: cache-vcpkg
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.VCPKG_DIR }}
+        key: vcpkg-qt5-static-${{ hashFiles('speedpatch/vcpkg.json') }}
+
+    - name: Install vcpkg and dependencies
+      shell: bash
+      run: |
+        if [ "${{ steps.cache-vcpkg.outputs.cache-hit }}" != 'true' ]; then
+          git clone https://github.com/microsoft/vcpkg.git $VCPKG_DIR
+          $VCPKG_DIR/bootstrap-vcpkg.bat
+          $VCPKG_DIR/vcpkg install qt5-base:x64-windows-static qt5-tools:x64-windows-static qt5-winextras:x64-windows-static
+          $VCPKG_DIR/vcpkg install qt5-base:x86-windows-static qt5-tools:x86-windows-static qt5-winextras:x86-windows-static
+        fi
+
+    - name: Build 64-bit
+      shell: cmd
+      run: |
+        set QT_QMAKE=%VCPKG_DIR%\installed\x64-windows-static\tools\qt5\bin\qmake.exe
+        cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DQT_QMAKE_EXECUTABLE:FILEPATH="%QT_QMAKE%" -S . -B build\x64
+        cmake --build build\x64
+
+    - name: Build 32-bit
+      shell: cmd
+      run: |
+        set QT_QMAKE=%VCPKG_DIR%\installed\x86-windows-static\tools\qt5\bin\qmake.exe
+        cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DQT_QMAKE_EXECUTABLE:FILEPATH="%QT_QMAKE%" -S . -B build\x86
+        cmake --build build\x86
+
+    - name: Collect artifacts
+      shell: cmd
+      run: |
+        mkdir artifacts 2>nul
+        copy "build\x64\cl.exe" "artifacts\"
+        copy "build\x64\cl64.dll" "artifacts\"
+        copy "build\x64\cl64.exe" "artifacts\"
+        copy "build\x86\cl32.dll" "artifacts\"
+        copy "build\x86\cl32.exe" "artifacts\"
+        dir artifacts
+
+    - name: Upload artifacts
+      id: upload-artifacts
+      uses: actions/upload-artifact@v4
+      if: success()
+      with:
+        name: cl-artifacts
+        path: artifacts/
+        if-no-files-found: warn
+        retention-days: 30
