@@ -20,6 +20,11 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
+    - name: Add swap space
+      uses: pierotofy/set-swap-space@master
+      with:
+        swap-size-gb: 16
+
     - name: Cache vcpkg
       id: cache-vcpkg
       uses: actions/cache@v4
@@ -42,15 +47,13 @@ jobs:
 
         printf 'set(VCPKG_TARGET_ARCHITECTURE x86)\nset(VCPKG_CRT_LINKAGE static)\nset(VCPKG_LIBRARY_LINKAGE static)\nset(VCPKG_CHAINLOAD_TOOLCHAIN_FILE "${VCPKG_ROOT_DIR}/triplets/x86-windows.cmake")\n' > triplets/x86-windows-static.cmake
 
-        # Install only needed Qt features (skip qml/declarative to avoid OOM)
-        export VCPKG_MAX_PARALLEL_CLIMB=2
-
-        $VCPKG_DIR/vcpkg install "qt5-base[core,gui,network,opengl,widgets,sql]:x64-windows-static" --overlay-triplets=triplets
-        $VCPKG_DIR/vcpkg install "qt5-tools[linguist]:x64-windows-static" --overlay-triplets=triplets
-        $VCPKG_DIR/vcpkg install "qt5-winextras:x64-windows-static" --overlay-triplets=triplets
-        $VCPKG_DIR/vcpkg install "qt5-base[core,gui,network,opengl,widgets,sql]:x86-windows-static" --overlay-triplets=triplets
-        $VCPKG_DIR/vcpkg install "qt5-tools[linguist]:x86-windows-static" --overlay-triplets=triplets
-        $VCPKG_DIR/vcpkg install "qt5-winextras:x86-windows-static" --overlay-triplets=triplets
+        # Install Qt5 static packages
+        $VCPKG_DIR/vcpkg install qt5-base:x64-windows-static --overlay-triplets=triplets
+        $VCPKG_DIR/vcpkg install qt5-tools:x64-windows-static --overlay-triplets=triplets
+        $VCPKG_DIR/vcpkg install qt5-winextras:x64-windows-static --overlay-triplets=triplets
+        $VCPKG_DIR/vcpkg install qt5-base:x86-windows-static --overlay-triplets=triplets
+        $VCPKG_DIR/vcpkg install qt5-tools:x86-windows-static --overlay-triplets=triplets
+        $VCPKG_DIR/vcpkg install qt5-winextras:x86-windows-static --overlay-triplets=triplets
 
     - name: Build 64-bit
       shell: cmd
