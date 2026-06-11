@@ -36,25 +36,35 @@ jobs:
         setup-python: false
         install-deps: false
 
-    - name: Find Visual Studio
-      id: vs
+    - name: Find Visual Studio and Qt paths
+      id: paths
       shell: pwsh
       run: |
-        $vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+        $vsPath = & "${env:PATH}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
         Write-Output "VS_PATH=$vsPath" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+        # Find actual Qt install paths
+        $qt64 = Get-ChildItem C:\Qt\5.15*\msvc2019_64 -ErrorAction SilentlyContinue | Select-Object -First 1
+        $qt32 = Get-ChildItem C:\Qt\5.15*\msvc2019 -ErrorAction SilentlyContinue | Select-Object -First 1
+        if (-not $qt64) { $qt64 = Get-ChildItem D:\*\Qt\5.15*\msvc2019_64 -ErrorAction SilentlyContinue | Select-Object -First 1 }
+        if (-not $qt32) { $qt32 = Get-ChildItem D:\*\Qt\5.15*\msvc2019 -ErrorAction SilentlyContinue | Select-Object -First 1 }
+        Write-Output "QT64_PATH=$($qt64.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append
+        Write-Output "QT32_PATH=$($qt32.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append
+        Write-Host "Qt64: $($qt64.FullName)"
+        Write-Host "Qt32: $($qt32.FullName)"
 
     - name: Build 64-bit
       shell: cmd
       run: |
         call "%VS_PATH%\VC\Auxiliary\Build\vcvars64.bat"
-        cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="C:\Qt\5.15\msvc2019_64" -DQt5_DIR="C:\Qt\5.15\msvc2019_64\lib\cmake\Qt5" -S . -B build\x64
+        cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="%QT64_PATH%" -DQt5_DIR="%QT64_PATH%\lib\cmake\Qt5" -S . -B build\x64
         cmake --build build\x64
 
     - name: Build 32-bit
       shell: cmd
       run: |
         call "%VS_PATH%\VC\Auxiliary\Build\vcvars32.bat"
-        cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="C:\Qt\5.15\msvc2019" -DQt5_DIR="C:\Qt\5.15\msvc2019\lib\cmake\Qt5" -S . -B build\x86
+        cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="%QT32_PATH%" -DQt5_DIR="%QT32_PATH%\lib\cmake\Qt5" -S . -B build\x86
         cmake --build build\x86
 
     - name: Collect artifacts
