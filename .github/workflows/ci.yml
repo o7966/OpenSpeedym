@@ -17,63 +17,28 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Free disk space
-      shell: powershell
-      run: |
-        # Remove unused components to free ~20GB
-        Remove-Item -Recurse -Force "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Android" -ErrorAction SilentlyContinue
-        Remove-Item -Recurse -Force "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\WebView2" -ErrorAction SilentlyContinue
-        Remove-Item -Recurse -Force "C:\Program Files (x86)\Microsoft SDKs" -ErrorAction SilentlyContinue
-        Remove-Item -Recurse -Force "C:\Program Files\Microsoft SQL Server" -ErrorAction SilentlyContinue
-        Remove-Item -Recurse -Force "C:\Program Files (x86)\Microsoft SQL Server" -ErrorAction SilentlyContinue
-        Remove-Item -Recurse -Force "C:\Program Files\Microsoft Office" -ErrorAction SilentlyContinue
-        Remove-Item -Recurse -Force "C:\Program Files (x86)\Microsoft Office" -ErrorAction SilentlyContinue
-        Remove-Item -Recurse -Force "C:\Program Files (x86)\Microsoft Visual Studio 14.0" -ErrorAction SilentlyContinue
-        Remove-Item -Recurse -Force "C:\Program Files (x86)\Windows Kits\10\TestingSDK" -ErrorAction SilentlyContinue
-        Remove-Item -Recurse -Force "C:\Program Files\Docker" -ErrorAction SilentlyContinue
-        docker system prune -af --volumes 2>$null
-        Get-PSDrive C | Select-Object @{N='Free(GB)';E={[math]::Round($_.Free/1GB,1)}}, @{N='Used(GB)';E={[math]::Round($_.Used/1GB,1)}}
-
-    - name: Cache vcpkg
-      id: cache-vcpkg
-      uses: actions/cache@v4
+    - name: Install Qt 5.15
+      uses: jurplel/install-qt-action@v4
       with:
-        path: C:\vcpkg
-        key: vcpkg-qt5-static-v5
-
-    - name: Install vcpkg and dependencies
-      shell: bash
-      run: |
-        if [ ! -f "C:/vcpkg/vcpkg.exe" ]; then
-          git clone https://github.com/microsoft/vcpkg.git C:/vcpkg
-        fi
-        C:/vcpkg/bootstrap-vcpkg.bat
-        C:/vcpkg/vcpkg install qt5-base:x64-windows-static
-        C:/vcpkg/vcpkg install qt5-tools:x64-windows-static --recurse
-        C:/vcpkg/vcpkg install qt5-winextras:x64-windows-static
-        C:/vcpkg/vcpkg install qt5-base:x86-windows-static
-        C:/vcpkg/vcpkg install qt5-tools:x86-windows-static --recurse
-        C:/vcpkg/vcpkg install qt5-winextras:x86-windows-static
-
-    - name: Clean vcpkg buildtrees to free space
-      shell: bash
-      run: |
-        rm -rf C:/vcpkg/buildtrees
-        rm -rf C:/vcpkg/downloads
-        df -h /
+        version: 5.15.2
+        host: windows
+        target: desktop
+        arch: win64_msvc2019_64
+        arch-win32: win32_msvc2019
+        setup-python: false
 
     - name: Build 64-bit
       shell: cmd
       run: |
-        set QT_QMAKE=C:\vcpkg\installed\x64-windows-static\tools\qt5\bin\qmake.exe
-        cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DQT_QMAKE_EXECUTABLE:FILEPATH="%QT_QMAKE%" -S . -B build\x64
+        call "C:\Qt\5.15\msvc2019_64\bin\qtenv2.bat"
+        cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="C:\Qt\5.15\msvc2019_64" -S . -B build\x64
         cmake --build build\x64
 
     - name: Build 32-bit
       shell: cmd
       run: |
-        set QT_QMAKE=C:\vcpkg\installed\x86-windows-static\tools\qt5\bin\qmake.exe
-        cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DQT_QMAKE_EXECUTABLE:FILEPATH="%QT_QMAKE%" -S . -B build\x86
+        call "C:\Qt\5.15\msvc2019\bin\qtenv2.bat"
+        cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="C:\Qt\5.15\msvc2019" -S . -B build\x86
         cmake --build build\x86
 
     - name: Collect artifacts
