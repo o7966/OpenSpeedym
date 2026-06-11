@@ -10,8 +10,6 @@ on:
 jobs:
   build-64:
     runs-on: windows-latest
-    outputs:
-      artifact-id: ${{ steps.upload-artifacts.outputs.artifact-id }}
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -41,15 +39,22 @@ jobs:
         cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="%QT_DIR%" -S . -B build\x64
         cmake --build build\x64
 
-    - name: Upload 64-bit artifacts
-      id: upload-artifacts
+    - name: Deploy Qt DLLs
+      shell: cmd
+      run: |
+        mkdir release
+        copy "build\x64\cl.exe" release\
+        copy "build\x64\cl64.dll" release\
+        copy "build\x64\cl64.exe" release\
+        for /f %%i in ('qmake -query QT_INSTALL_PREFIX') do set QT_DIR=%%i
+        %QT_DIR%\bin\windeployqt.exe --release --no-translations --no-system-d3d-compiler --no-opengl-sw release\cl.exe
+        dir release
+
+    - name: Upload release artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: cl-x64
-        path: |
-          build\x64\cl.exe
-          build\x64\cl64.dll
-          build\x64\cl64.exe
+        name: cl-release
+        path: release/
         retention-days: 30
 
   build-32:
@@ -83,27 +88,11 @@ jobs:
         cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="%QT_DIR%" -S . -B build\x86
         cmake --build build\x86
 
-    - name: Upload 32-bit artifacts
+    - name: Upload 32-bit bridge
       uses: actions/upload-artifact@v4
       with:
         name: cl-x86
         path: |
           build\x86\cl32.dll
           build\x86\cl32.exe
-        retention-days: 30
-
-  merge:
-    needs: [build-64, build-32]
-    runs-on: windows-latest
-    steps:
-    - name: Download all artifacts
-      uses: actions/download-artifact@v4
-
-    - name: Merge and upload
-      uses: actions/upload-artifact@v4
-      with:
-        name: cl-artifacts
-        path: |
-          cl-x64/
-          cl-x86/
         retention-days: 30
