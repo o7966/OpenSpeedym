@@ -20,10 +20,26 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Add swap space
-      uses: pierotofy/set-swap-space@master
-      with:
-        swap-size-gb: 16
+    - name: Add swap space (Windows)
+      shell: powershell
+      run: |
+        # Enable pagefile (swap) on Windows to prevent OOM during Qt build
+        $pagefile = Get-CimInstance Win32_PageFileSetting
+        $os = Get-CimInstance Win32_OperatingSystem
+        $swapSize = 16384  # 16GB
+        if ($null -eq $pagefile -or $pagefile.InitialSize -lt $swapSize) {
+          $sysDrive = $env:SystemDrive
+          Set-CimInstance -Query "SELECT * FROM Win32_ComputerSystem" -Property @{AutomaticManagedPagefile=$false}
+          Set-CimInstance -Query "SELECT * FROM Win32_PageFileSetting WHERE Name='$sysDrive\\pagefile.sys'" -Property @{InitialSize=$swapSize; MaximumSize=$swapSize} -ErrorAction SilentlyContinue
+          # If pagefile doesn't exist, create it via WMI
+          $pageFileSetting = [WMI]'Win32_PageFileSetting.Name=""'
+          if ($pageFileSetting -eq $null) {
+            $computerSystem = Get-CimInstance Win32_ComputerSystem
+            $computerSystem.AutomaticManagedPagefile = $false
+            $computerSystem.Put()
+          }
+          Write-Host "Pagefile configured for ${swapSize}MB"
+        }
 
     - name: Cache vcpkg
       id: cache-vcpkg
