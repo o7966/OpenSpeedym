@@ -40,14 +40,14 @@ jobs:
       id: paths
       shell: pwsh
       run: |
-        $vsPath = & "${env:PATH}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+        $vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
         Write-Output "VS_PATH=$vsPath" | Out-File -FilePath $env:GITHUB_ENV -Append
 
-        # Find actual Qt install paths
-        $qt64 = Get-ChildItem C:\Qt\5.15*\msvc2019_64 -ErrorAction SilentlyContinue | Select-Object -First 1
-        $qt32 = Get-ChildItem C:\Qt\5.15*\msvc2019 -ErrorAction SilentlyContinue | Select-Object -First 1
-        if (-not $qt64) { $qt64 = Get-ChildItem D:\*\Qt\5.15*\msvc2019_64 -ErrorAction SilentlyContinue | Select-Object -First 1 }
-        if (-not $qt32) { $qt32 = Get-ChildItem D:\*\Qt\5.15*\msvc2019 -ErrorAction SilentlyContinue | Select-Object -First 1 }
+        # Find actual Qt install paths - check common locations
+        $qt64 = Get-ChildItem "C:\Qt\5.15*\msvc2019_64" -ErrorAction SilentlyContinue | Select-Object -First 1
+        $qt32 = Get-ChildItem "C:\Qt\5.15*\msvc2019" -ErrorAction SilentlyContinue | Select-Object -First 1
+        if (-not $qt64) { $qt64 = Get-ChildItem "D:\*\Qt\5.15*\msvc2019_64" -Recurse -Directory -ErrorAction SilentlyContinue | Select-Object -First 1 }
+        if (-not $qt32) { $qt32 = Get-ChildItem "D:\*\Qt\5.15*\msvc2019" -Recurse -Directory -ErrorAction SilentlyContinue | Select-Object -First 1 }
         Write-Output "QT64_PATH=$($qt64.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append
         Write-Output "QT32_PATH=$($qt32.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append
         Write-Host "Qt64: $($qt64.FullName)"
