@@ -39,8 +39,6 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         winutils.h winutils.cpp
         processmonitor.h processmonitor.cpp
         resources.qrc
-        images/icon.ico images/logo.png
-        icons.rc
     )
 
 # Define target properties for Android with Qt 6 as:
@@ -61,8 +59,6 @@ else()
           ${PROJECT_SOURCES}
           processmonitor.h processmonitor.cpp
           resources.qrc
-          images/icon.ico images/logo.png
-          icons.rc
           config.h
           windbg.h
           aboutdialog.ui

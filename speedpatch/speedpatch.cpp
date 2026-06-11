@@ -115,7 +115,7 @@ static GETSYSTEMTIMEPRECISEASFILETIME pfnDetourGetSystemTimePreciseAsFileTime = 
 static SETWAITABLETIMEREX pfnKernelSetWaitableTimerEx = NULL;
 static SETWAITABLETIMEREX pfnDetourSetWaitableTimerEx = NULL;
 
-SPEEDPATCH_API void ChangeSpeed(double factor_)
+CL_API void ChangeSpeed(double factor_)
 {
     factor.store(factor_);
 }
