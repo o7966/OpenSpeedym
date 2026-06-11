@@ -25,7 +25,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ${{ env.VCPKG_DIR }}
-        key: vcpkg-qt5-static-${{ hashFiles('speedpatch/vcpkg.json') }}
+        key: vcpkg-qt5-static-v2-${{ hashFiles('speedpatch/vcpkg.json') }}
 
     - name: Install vcpkg and dependencies
       shell: bash
@@ -38,22 +38,11 @@ jobs:
         # Create overlay triplets
         mkdir -p triplets
 
-        cat > triplets/x64-windows-static.cmake << 'EOF'
-set(VCPKG_TARGET_ARCHITECTURE x64)
-set(VCPKG_CRT_LINKAGE static)
-set(VCPKG_LIBRARY_LINKAGE static)
-set(VCPKG_CHAINLOAD_TOOLCHAIN_FILE "${VCPKG_ROOT_DIR}/triplets/x64-windows.cmake")
-EOF
+        printf 'set(VCPKG_TARGET_ARCHITECTURE x64)\nset(VCPKG_CRT_LINKAGE static)\nset(VCPKG_LIBRARY_LINKAGE static)\nset(VCPKG_CHAINLOAD_TOOLCHAIN_FILE "${VCPKG_ROOT_DIR}/triplets/x64-windows.cmake")\n' > triplets/x64-windows-static.cmake
 
-        cat > triplets/x86-windows-static.cmake << 'EOF'
-set(VCPKG_TARGET_ARCHITECTURE x86)
-set(VCPKG_CRT_LINKAGE static)
-set(VCPKG_LIBRARY_LINKAGE static)
-set(VCPKG_CHAINLOAD_TOOLCHAIN_FILE "${VCPKG_ROOT_DIR}/triplets/x86-windows.cmake")
-EOF
+        printf 'set(VCPKG_TARGET_ARCHITECTURE x86)\nset(VCPKG_CRT_LINKAGE static)\nset(VCPKG_LIBRARY_LINKAGE static)\nset(VCPKG_CHAINLOAD_TOOLCHAIN_FILE "${VCPKG_ROOT_DIR}/triplets/x86-windows.cmake")\n' > triplets/x86-windows-static.cmake
 
         # Install only needed Qt features (skip qml/declarative to avoid OOM)
-        # Limit parallelism to reduce memory usage
         export VCPKG_MAX_PARALLEL_CLIMB=2
 
         $VCPKG_DIR/vcpkg install "qt5-base[core,gui,network,opengl,widgets,xcb,sql]:x64-windows-static" --overlay-triplets=triplets
