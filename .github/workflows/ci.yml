@@ -7,9 +7,6 @@ on:
     branches: [ master ]
   workflow_dispatch:
 
-env:
-  VCPKG_DIR: C:\vcpkg
-
 jobs:
   build:
     runs-on: windows-latest
@@ -24,43 +21,35 @@ jobs:
       id: cache-vcpkg
       uses: actions/cache@v4
       with:
-        path: ${{ env.VCPKG_DIR }}
-        key: vcpkg-qt5-static-v3-full
+        path: C:\vcpkg
+        key: vcpkg-qt5-static-v4
 
     - name: Install vcpkg and dependencies
       shell: bash
       run: |
-        if [ ! -f "$VCPKG_DIR/vcpkg.exe" ]; then
-          git clone https://github.com/microsoft/vcpkg.git $VCPKG_DIR
+        if [ ! -f "C:/vcpkg/vcpkg.exe" ]; then
+          git clone https://github.com/microsoft/vcpkg.git C:/vcpkg
         fi
-        $VCPKG_DIR/bootstrap-vcpkg.bat
-
-        # Create overlay triplets
-        mkdir -p triplets
-
-        printf 'set(VCPKG_TARGET_ARCHITECTURE x64)\nset(VCPKG_CRT_LINKAGE static)\nset(VCPKG_LIBRARY_LINKAGE static)\nset(VCPKG_CHAINLOAD_TOOLCHAIN_FILE "${VCPKG_ROOT_DIR}/triplets/x64-windows.cmake")\n' > triplets/x64-windows-static.cmake
-
-        printf 'set(VCPKG_TARGET_ARCHITECTURE x86)\nset(VCPKG_CRT_LINKAGE static)\nset(VCPKG_LIBRARY_LINKAGE static)\nset(VCPKG_CHAINLOAD_TOOLCHAIN_FILE "${VCPKG_ROOT_DIR}/triplets/x86-windows.cmake")\n' > triplets/x86-windows-static.cmake
-
-        # Install Qt5 static packages
-        $VCPKG_DIR/vcpkg install qt5-base:x64-windows-static --overlay-triplets=triplets
-        $VCPKG_DIR/vcpkg install qt5-tools:x64-windows-static --overlay-triplets=triplets
-        $VCPKG_DIR/vcpkg install qt5-winextras:x64-windows-static --overlay-triplets=triplets
-        $VCPKG_DIR/vcpkg install qt5-base:x86-windows-static --overlay-triplets=triplets
-        $VCPKG_DIR/vcpkg install qt5-tools:x86-windows-static --overlay-triplets=triplets
-        $VCPKG_DIR/vcpkg install qt5-winextras:x86-windows-static --overlay-triplets=triplets
+        C:/vcpkg/bootstrap-vcpkg.bat
+        # Use built-in triplets (no overlay needed)
+        C:/vcpkg/vcpkg install qt5-base:x64-windows-static
+        C:/vcpkg/vcpkg install qt5-tools:x64-windows-static
+        C:/vcpkg/vcpkg install qt5-winextras:x64-windows-static
+        C:/vcpkg/vcpkg install qt5-base:x86-windows-static
+        C:/vcpkg/vcpkg install qt5-tools:x86-windows-static
+        C:/vcpkg/vcpkg install qt5-winextras:x86-windows-static
 
     - name: Build 64-bit
       shell: cmd
       run: |
-        set QT_QMAKE=%VCPKG_DIR%\installed\x64-windows-static\tools\qt5\bin\qmake.exe
+        set QT_QMAKE=C:\vcpkg\installed\x64-windows-static\tools\qt5\bin\qmake.exe
         cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DQT_QMAKE_EXECUTABLE:FILEPATH="%QT_QMAKE%" -S . -B build\x64
         cmake --build build\x64
 
     - name: Build 32-bit
       shell: cmd
       run: |
-        set QT_QMAKE=%VCPKG_DIR%\installed\x86-windows-static\tools\qt5\bin\qmake.exe
+        set QT_QMAKE=C:\vcpkg\installed\x86-windows-static\tools\qt5\bin\qmake.exe
         cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DQT_QMAKE_EXECUTABLE:FILEPATH="%QT_QMAKE%" -S . -B build\x86
         cmake --build build\x86
 
