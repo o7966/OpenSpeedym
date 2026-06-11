@@ -33,10 +33,10 @@ jobs:
         C:/vcpkg/bootstrap-vcpkg.bat
         # Use built-in triplets (no overlay needed)
         C:/vcpkg/vcpkg install qt5-base:x64-windows-static
-        C:/vcpkg/vcpkg install qt5-tools:x64-windows-static
+        C:/vcpkg/vcpkg install qt5-tools:x64-windows-static --recurse
         C:/vcpkg/vcpkg install qt5-winextras:x64-windows-static
         C:/vcpkg/vcpkg install qt5-base:x86-windows-static
-        C:/vcpkg/vcpkg install qt5-tools:x86-windows-static
+        C:/vcpkg/vcpkg install qt5-tools:x86-windows-static --recurse
         C:/vcpkg/vcpkg install qt5-winextras:x86-windows-static
 
     - name: Build 64-bit
