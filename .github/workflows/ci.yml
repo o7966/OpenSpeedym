@@ -30,7 +30,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ${{ env.VCPKG_DIR }}
-        key: vcpkg-qt5-static-v2-${{ hashFiles('speedpatch/vcpkg.json') }}
+        key: vcpkg-qt5-static-v3-full
 
     - name: Install vcpkg and dependencies
       shell: bash
