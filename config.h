@@ -20,8 +20,8 @@
 
 #define CL_VERSION "v1.7.9"
 
-#define BRIDGE32_EXE "cl32.exe"
-#define BRIDGE64_EXE "cl64.exe"
+#define BRIDGE32_EXE "win32\\cl32.exe"
+#define BRIDGE64_EXE "win64\\cl64.exe"
 
 #define SPEEDPATCH32_DLL "cl32.dll"
 #define SPEEDPATCH64_DLL "cl64.dll"

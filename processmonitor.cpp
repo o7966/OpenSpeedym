@@ -354,7 +354,7 @@ ProcessMonitor::startBridge32()
     {
         QMessageBox::critical(nullptr,
                               tr("启动失败"),
-                              tr("32位桥接子进程启动失败，请确保cl.exe和cl32.exe在同一目录下"),
+                              tr("32位桥接子进程启动失败，请确保cl.exe和win32\\cl32.exe在同一目录下"),
                               QMessageBox::Ok);
         qDebug() << "32位桥接子进程启动失败";
 
@@ -383,7 +383,7 @@ ProcessMonitor::startBridge64()
     {
         QMessageBox::critical(nullptr,
                               tr("启动失败"),
-                              tr("64位桥接子进程启动失败，请确保cl.exe和cl64.exe在同一目录下"),
+                              tr("64位桥接子进程启动失败，请确保cl.exe和win64\\cl64.exe在同一目录下"),
                               QMessageBox::Ok);
         qDebug() << "64位桥接子进程启动失败";
     }
