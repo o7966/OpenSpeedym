@@ -45,10 +45,10 @@ jobs:
         # Install only needed Qt features (skip qml/declarative to avoid OOM)
         export VCPKG_MAX_PARALLEL_CLIMB=2
 
-        $VCPKG_DIR/vcpkg install "qt5-base[core,gui,network,opengl,widgets,xcb,sql]:x64-windows-static" --overlay-triplets=triplets
+        $VCPKG_DIR/vcpkg install "qt5-base[core,gui,network,opengl,widgets,sql]:x64-windows-static" --overlay-triplets=triplets
         $VCPKG_DIR/vcpkg install "qt5-tools[linguist]:x64-windows-static" --overlay-triplets=triplets
         $VCPKG_DIR/vcpkg install "qt5-winextras:x64-windows-static" --overlay-triplets=triplets
-        $VCPKG_DIR/vcpkg install "qt5-base[core,gui,network,opengl,widgets,xcb,sql]:x86-windows-static" --overlay-triplets=triplets
+        $VCPKG_DIR/vcpkg install "qt5-base[core,gui,network,opengl,widgets,sql]:x86-windows-static" --overlay-triplets=triplets
         $VCPKG_DIR/vcpkg install "qt5-tools[linguist]:x86-windows-static" --overlay-triplets=triplets
         $VCPKG_DIR/vcpkg install "qt5-winextras:x86-windows-static" --overlay-triplets=triplets
 
